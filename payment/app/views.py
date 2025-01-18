@@ -12,29 +12,30 @@ from django.views.decorators.csrf import csrf_exempt
 def home(req):
     return render(req,"index.html")
 
-def order_payment(req):
-    if req.method == "POST":
-        name=req.POST.get("name")
-        amount=req.POST.get("amount")
-        client=razorpay.Client(auth=(settings.RAZORPAY_KEY_ID,settings.RAZORPAY_KEY_SECRET))
+def order_payment(request):
+    if request.method == "POST":
+        name = request.POST.get("name")
+        print(name)
+        amount = request.POST.get("amount")
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
         razorpay_order = client.order.create(
-            {"amount":int(amount) *100, "currency": "INR", "payment_capture":"1"}
+            {"amount": int(amount) * 100, "currency": "INR", "payment_capture": "1"}
         )
         order_id=razorpay_order['id']
-        order= Order.objects.create(
+        order = Order.objects.create(
             name=name, amount=amount, provider_order_id=order_id
         )
         order.save()
         return render(
-            req,"index.html",
+            request,
+            "index.html",
             {
-                "callback_url": "http://"+"127.0.0.1:8000" + "razorpay/callback",
-                "razorpay_key":settings.RAZORPAY_KEY_ID,
-                "order":order,
+                "callback_url": "http://" + "127.0.0.1:8000" + "razorpay/callback",
+                "razorpay_key": settings.RAZORPAY_KEY_ID,
+                "order": order,
             },
         )
-    return render(req,"index.html")
-
+    return render(request, "index.html")
 
 @csrf_exempt
 def callback(request):
